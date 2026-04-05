@@ -32,8 +32,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
 
       try {
+        const t = token();
+        const authHeaders: HeadersInit = {};
+        if (t) {
+          authHeaders.Authorization = `Bearer ${t}`;
+        }
+
         const res = await fetch(`${api}/auth/me`, {
-          headers: token() ? { Authorization: `Bearer ${token()}` } : {},
+          headers: authHeaders,
         });
         const data = await res.json().catch(() => ({}));
 

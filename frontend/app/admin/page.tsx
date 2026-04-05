@@ -17,7 +17,12 @@ function AdminContent() {
 
     const loadDashboard = async () => {
       try {
-        const authHeaders = token() ? { Authorization: `Bearer ${token()}` } : {};
+        const t = token();
+        const authHeaders: HeadersInit = {};
+        if (t) {
+          authHeaders.Authorization = `Bearer ${t}`;
+        }
+
         const [sessionRes, postsRes] = await Promise.all([
           fetch(`${api}/auth/me`, { headers: authHeaders }),
           fetch(`${api}/posts/admin/all?limit=200`, { headers: authHeaders }),
