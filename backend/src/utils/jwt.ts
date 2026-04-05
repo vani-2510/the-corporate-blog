@@ -24,11 +24,13 @@ export const verifyRefreshToken = (token: string): { id: string } => {
   return jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as { id: string };
 };
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const sharedCookieOptions = {
   path: '/',
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  secure: isProduction,
+  sameSite: isProduction ? ('none' as const) : ('lax' as const),
   ...(process.env.COOKIE_DOMAIN ? { domain: process.env.COOKIE_DOMAIN } : {}),
 };
 

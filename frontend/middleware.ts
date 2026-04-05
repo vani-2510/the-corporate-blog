@@ -1,17 +1,5 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get('accessToken')?.value;
-
-  if (!token) {
-    const loginUrl = new URL('/login', request.url);
-    return NextResponse.redirect(loginUrl);
-  }
-
+export function middleware() {
   return NextResponse.next();
 }
-
-export const config = {
-  matcher: ['/admin/:path*'],
-};
