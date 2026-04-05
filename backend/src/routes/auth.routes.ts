@@ -10,14 +10,6 @@ import { z } from 'zod';
 
 const router = Router();
 
-// TEMP DEBUG - DELETE AFTER USE
-router.get('/debug-callback', (_req, res) => {
-  res.json({
-    GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? 'set' : 'missing',
-  });
-});
-
 // OAuth2 client for redirect-based flow (browser login)
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
