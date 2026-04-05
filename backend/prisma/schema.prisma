@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  WRITER
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  name        String
+  role        Role     @default(WRITER)
+  avatar      String?
+  googleId    String?  @unique
+  bio         String?
+  slug        String?  @unique
+  password    String?
+  refreshToken String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts       Post[]
+  auditLogs   AuditLog[]
+
+  @@map("users")
+}
+
+model Post {
+  id              String     @id @default(uuid())
+  title           String
+  slug            String     @unique
+  excerpt         String?
+  content         Json       @default("[]")
+  status          PostStatus @default(DRAFT)
+  featuredImage   String?
+  featuredImageAlt String?
+  seoTitle        String?
+  seoDescription  String?
+  canonicalUrl    String?
+  isSponsored     Boolean    @default(false)
+  viewCount       Int        @default(0)
+  publishedAt     DateTime?
+  scheduledAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  authorId        String
+  author          User       @relation(fields: [authorId], references: [id])
+
+  categories      PostCategory[]
+  images          Image[]
+  views           PostView[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([authorId])
+  @@map("posts")
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts       PostCategory[]
+
+  @@index([slug])
+  @@map("categories")
+}
+
+model PostCategory {
+  postId      String
+  categoryId  String
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([postId, categoryId])
+  @@map("post_categories")
+}
+
+model Image {
+  id        String   @id @default(uuid())
+  url       String
+  publicId  String
+  altText   String
+  title     String?
+  caption   String?
+  width     Int?
+  height    Int?
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@map("images")
+}
+
+model PostView {
+  id        String   @id @default(uuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  ipHash    String
+  userAgent String?
+  viewedAt  DateTime @default(now())
+
+  @@unique([postId, ipHash, viewedAt])
+  @@index([postId])
+  @@map("post_views")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
