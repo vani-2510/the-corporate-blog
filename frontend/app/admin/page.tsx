@@ -10,15 +10,17 @@ function AdminContent() {
   const [stats, setStats] = useState<Stats | null>(null);
 
   const api = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+  const token = () => localStorage.getItem('accessToken');
 
   useEffect(() => {
     let active = true;
 
     const loadDashboard = async () => {
       try {
+        const authHeaders = token() ? { Authorization: `Bearer ${token()}` } : {};
         const [sessionRes, postsRes] = await Promise.all([
-          fetch(`${api}/auth/me`, { credentials: 'include' }),
-          fetch(`${api}/posts/admin/all?limit=200`, { credentials: 'include' }),
+          fetch(`${api}/auth/me`, { headers: authHeaders }),
+          fetch(`${api}/posts/admin/all?limit=200`, { headers: authHeaders }),
         ]);
 
         const session = await sessionRes.json().catch(() => ({}));

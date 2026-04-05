@@ -5,55 +5,49 @@ import { useRouter } from 'next/navigation';
 
 export default function AuthCallbackPage() {
   const router = useRouter();
-  const api = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
   useEffect(() => {
-    let active = true;
-
-    const completeLogin = async () => {
+    async function handleCallback() {
       try {
-        const res = await fetch(`${api}/auth/me`, {
-          credentials: 'include',
-        });
-        const data = await res.json().catch(() => ({}));
+        // Read token from URL hash
+        const hash = window.location.hash;
+        const token = hash.startsWith('#token=') ? hash.slice(7) : null;
 
-        if (!res.ok || !data.user) {
-          throw new Error(data.error || 'Could not verify session');
-        }
-
-        if (data.accessToken) {
-          localStorage.setItem('accessToken', data.accessToken);
-        } else {
-          localStorage.removeItem('accessToken');
-        }
-
-        localStorage.setItem('userName', data.user.name || '');
-        localStorage.setItem('userRole', data.user.role || '');
-
-        if (active) {
-          router.replace('/admin');
-        }
-      } catch {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('userName');
-        localStorage.removeItem('userRole');
-
-        if (active) {
+        if (!token) {
           router.replace('/login?error=oauth_failed');
+          return;
         }
+
+        // Store token in localStorage
+        localStorage.setItem('accessToken', token);
+
+        // Verify token by calling /auth/me with Bearer header
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          router.replace('/login?error=oauth_failed');
+          return;
+        }
+
+        router.replace('/admin');
+      } catch {
+        router.replace('/login?error=oauth_failed');
       }
-    };
+    }
 
-    completeLogin();
-
-    return () => {
-      active = false;
-    };
-  }, [api, router]);
+    handleCallback();
+  }, [router]);
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', fontFamily: 'var(--font-sans)', color: 'var(--color-muted)' }}>
-      Signing you in...
+    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p>Signing you in...</p>
     </div>
   );
 }

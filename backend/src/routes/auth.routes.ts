@@ -81,7 +81,7 @@ router.get('/google/callback', async (req: Request, res: Response) => {
     res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
     res.cookie('refreshToken', refreshToken, cookieOptions);
 
-    res.redirect(`${process.env.FRONTEND_URL}/auth/callback`);
+    res.redirect(`${process.env.FRONTEND_URL}/auth/callback#token=${accessToken}`);
   } catch (err) {
     console.error('Google OAuth callback error:', err);
     res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);

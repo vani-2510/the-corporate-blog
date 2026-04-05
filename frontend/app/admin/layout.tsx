@@ -20,6 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [authChecked, setAuthChecked] = useState(false);
   const [userName, setUserName] = useState('');
   const api = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+  const token = () => localStorage.getItem('accessToken');
 
   useEffect(() => {
     let active = true;
@@ -32,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       try {
         const res = await fetch(`${api}/auth/me`, {
-          credentials: 'include',
+          headers: token() ? { Authorization: `Bearer ${token()}` } : {},
         });
         const data = await res.json().catch(() => ({}));
 
@@ -42,8 +43,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         if (data.accessToken) {
           localStorage.setItem('accessToken', data.accessToken);
-        } else {
-          localStorage.removeItem('accessToken');
         }
 
         localStorage.setItem('userName', data.user.name || '');
@@ -77,7 +76,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     try {
       await fetch(`${api}/auth/logout`, {
         method: 'POST',
-        credentials: 'include',
       });
     } catch {
       // Ignore logout transport failures and clear the local session anyway.
